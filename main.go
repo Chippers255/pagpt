@@ -1,79 +1,42 @@
 package main
 
 import (
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
 func main() {
 	app := tview.NewApplication()
 
-	// Create the layout panels
+	// Create the layout panels.
 	systemInfoPanel := tview.NewTextView().
 		SetDynamicColors(true).
-		SetTextAlign(tview.AlignLeft).
-		SetText("System Information and Resource Usage will be displayed here.")
-
-	messagePanel := tview.NewTextView().
+		SetText("System Information").
+		SetTextAlign(tview.AlignCenter)
+	terminalPanel := tview.NewTextView().
 		SetDynamicColors(true).
-		SetTextAlign(tview.AlignLeft).
-		SetText("Messages will be displayed here. This is a placeholder for now.")
-
-	aiOutputPanel := tview.NewTextView().
+		SetText("Terminal Window").
+		SetTextAlign(tview.AlignCenter)
+	notificationsPanel := tview.NewTextView().
 		SetDynamicColors(true).
-		SetTextAlign(tview.AlignLeft).
-		SetText("AI Output will be displayed here.")
+		SetText("Notifications").
+		SetTextAlign(tview.AlignCenter)
 
-	userInputPanel := tview.NewInputField().
-		SetLabel("User Input: ").
-		SetFieldWidth(100).
-		SetFieldBackgroundColor(tview.Styles.PrimitiveBackgroundColor)
+	// Create a flex layout that arranges panels vertically.
+	flex := tview.NewFlex().SetDirection(tview.FlexRow)
 
-	instructionsBar := tview.NewTextView().
-		SetDynamicColors(true).
-		SetTextAlign(tview.AlignCenter).
-		SetText("Hotkeys: [Ctrl-C] Quit [Ctrl-R] Refresh")
+	// Add the system information panel with fixed height.
+	flex.AddItem(systemInfoPanel, 3, 1, false)
 
-	// Create the ASCII logo for the bootup screen
-	logo := `
-	______   __  __   ____     ______   ____     ____     ______   ______   __ __
-	/ ____/   \ \/ /  / __ )   / ____/  / __ \   / __ \   / ____/  / ____/  / //_/
-   / /         \  /  / __  |  / __/    / /_/ /  / / / /  / __/    / /      / ,<   
-  / /___       / /  / /_/ /  / /___   / _, _/  / /_/ /  / /___   / /___   / /| |  
-  \____/      /_/  /_____/  /_____/  /_/ |_|  /_____/  /_____/   \____/  /_/ |_|  
-																				  
-`
+	// Create a horizontal flex for the terminal and notifications panels.
+	horizontalFlex := tview.NewFlex().
+		AddItem(terminalPanel, 0, 2, false).
+		AddItem(notificationsPanel, 0, 1, false)
 
-	// Create a flex layout to arrange panels
-	flex := tview.NewFlex().
-		SetDirection(tview.FlexRow).
-		AddItem(tview.NewTextView().SetText(logo).SetTextAlign(tview.AlignCenter), 0, 1, false).
-		AddItem(systemInfoPanel, 0, 3, false).
-		AddItem(messagePanel, 0, 2, false).
-		AddItem(aiOutputPanel, 0, 2, false).
-		AddItem(userInputPanel, 0, 1, true). // Set to true to capture input
-		AddItem(instructionsBar, 1, 1, false)
+	// Add the horizontal flex to the main flex layout.
+	flex.AddItem(horizontalFlex, 0, 3, false)
 
-	// Handler to update AI output panel when Enter is pressed
-	userInputPanel.SetDoneFunc(func(key tcell.Key) {
-		if key == tcell.KeyEnter {
-			// Get the text from the input field
-			message := userInputPanel.GetText()
-			// Clear the input field for new input
-			userInputPanel.SetText("")
-
-			// Safely update the UI in the main thread
-			app.QueueUpdateDraw(func() {
-				// Append the message to the AI output panel
-				currentText := aiOutputPanel.GetText(true)
-				newText := currentText + message + "\n"
-				aiOutputPanel.SetText(newText)
-			})
-		}
-	})
-
-	// Set the root and run the application
-	if err := app.SetRoot(flex, true).Run(); err != nil {
+	// Set the root and start the application.
+	if err := app.SetRoot(flex, true).SetFocus(flex).Run(); err != nil {
 		panic(err)
 	}
 }
